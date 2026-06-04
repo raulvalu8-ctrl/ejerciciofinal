@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Control de Préstamos - Facultad de Ingeniería Mochis</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <h1>Préstamos de Equipos</h1>
+      <p>Facultad de Ingeniería Mochis</p>
+    </div>
+    <nav class="main-nav">
+      <button data-view="dashboard" class="nav-button active">Inicio</button>
+      <button data-view="units" class="nav-button">Unidades</button>
+      <button data-view="careers" class="nav-button">Carreras</button>
+      <button data-view="users" class="nav-button">Usuarios</button>
+      <button data-view="equipment" class="nav-button">Equipos</button>
+      <button data-view="loans" class="nav-button">Préstamos</button>
+      <button data-view="reports" class="nav-button">Reportes</button>
+    </nav>
+  </header>
+  <div id="toast" class="toast"></div>
+
+  <main class="container">
+    <section id="dashboard" class="view active-view">
+      <div class="cards-grid">
+        <article class="card card-primary">
+          <h2 id="total-units">0</h2>
+          <p>Unidades académicas</p>
+        </article>
+        <article class="card card-secondary">
+          <h2 id="total-careers">0</h2>
+          <p>Carreras</p>
+        </article>
+        <article class="card card-tertiary">
+          <h2 id="total-users">0</h2>
+          <p>Usuarios</p>
+        </article>
+        <article class="card card-success">
+          <h2 id="total-equipment">0</h2>
+          <p>Equipos</p>
+        </article>
+        <article class="card card-info">
+          <h2 id="total-loans">0</h2>
+          <p>Préstamos</p>
+        </article>
+      </div>
+      <div class="panel">
+        <h2>Últimos préstamos</h2>
+        <div class="table-wrapper"><table>
+          <thead><tr><th>#</th><th>Usuario</th><th>Equipo</th><th>Salida</th><th>Entrega</th><th>Estado</th></tr></thead>
+          <tbody id="latest-loans"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <section id="units" class="view">
+      <div class="panel two-column">
+        <div>
+          <h2>Unidades Académicas</h2>
+          <p>Registra y administra las unidades académicas.</p>
+          <form id="unit-form" class="form-card">
+            <input type="hidden" id="unit-id" value="" />
+            <label>Nombre de unidad</label>
+            <input type="text" id="unit-name" placeholder="Facultad de Ingeniería Mochis" required />
+            <div class="form-actions">
+              <button type="submit">Guardar unidad</button>
+              <button type="button" id="unit-cancel" class="button-secondary">Cancelar</button>
+            </div>
+          </form>
+        </div>
+        <div>
+          <h3>Listado de unidades</h3>
+          <div class="table-wrapper"><table>
+            <thead><tr><th>#</th><th>Nombre</th><th>Acciones</th></tr></thead>
+            <tbody id="unit-list"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="careers" class="view">
+      <div class="panel two-column">
+        <div>
+          <h2>Carreras</h2>
+          <p>Registra carreras vinculadas a unidades académicas.</p>
+          <form id="career-form" class="form-card">
+            <input type="hidden" id="career-id" value="" />
+            <label>Nombre de carrera</label>
+            <input type="text" id="career-name" placeholder="Ingeniería Civil" required />
+            <label>Unidad académica</label>
+            <select id="career-unit" required></select>
+            <div class="form-actions">
+              <button type="submit">Guardar carrera</button>
+              <button type="button" id="career-cancel" class="button-secondary">Cancelar</button>
+            </div>
+          </form>
+        </div>
+        <div>
+          <h3>Listado de carreras</h3>
+          <div class="table-wrapper"><table>
+            <thead><tr><th>#</th><th>Nombre</th><th>Unidad</th><th>Acciones</th></tr></thead>
+            <tbody id="career-list"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="users" class="view">
+      <div class="panel two-column">
+        <div>
+          <h2>Usuarios</h2>
+          <p>Registra alumnos y profesores.</p>
+          <form id="user-form" class="form-card">
+            <input type="hidden" id="user-id" value="" />
+            <label>Nombre</label>
+            <input type="text" id="user-name" placeholder="Ana López" required />
+            <label>Tipo</label>
+            <select id="user-type" required>
+              <option value="">Selecciona</option>
+              <option value="Alumno">Alumno</option>
+              <option value="Profesor">Profesor</option>
+            </select>
+            <label>Carrera</label>
+            <select id="user-career" required></select>
+            <div class="form-actions">
+              <button type="submit">Guardar usuario</button>
+              <button type="button" id="user-cancel" class="button-secondary">Cancelar</button>
+            </div>
+          </form>
+        </div>
+        <div>
+          <h3>Listado de usuarios</h3>
+          <div class="table-wrapper"><table>
+            <thead><tr><th>#</th><th>Nombre</th><th>Tipo</th><th>Carrera</th><th>Acciones</th></tr></thead>
+            <tbody id="user-list"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="equipment" class="view">
+      <div class="panel two-column">
+        <div>
+          <h2>Equipos</h2>
+          <p>Registra equipos disponibles para préstamo.</p>
+          <form id="equipment-form" class="form-card">
+            <input type="hidden" id="equipment-id" value="" />
+            <label>Nombre del equipo</label>
+            <input type="text" id="equipment-name" placeholder="Proyector de video" required />
+            <label>Serial</label>
+            <input type="text" id="equipment-serial" placeholder="PRJ-0001" />
+            <label>Cantidad</label>
+            <input type="number" id="equipment-quantity" min="1" value="1" required />
+            <div class="form-actions">
+              <button type="submit">Guardar equipo</button>
+              <button type="button" id="equipment-cancel" class="button-secondary">Cancelar</button>
+            </div>
+          </form>
+        </div>
+        <div>
+          <h3>Listado de equipos</h3>
+          <div class="table-wrapper"><table>
+            <thead><tr><th>#</th><th>Nombre</th><th>Serial</th><th>Cantidad</th><th>Acciones</th></tr></thead>
+            <tbody id="equipment-list"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="loans" class="view">
+      <div class="panel two-column">
+        <div>
+          <h2>Préstamos</h2>
+          <p>Registra entregas y devoluciones de equipos.</p>
+          <form id="loan-form" class="form-card">
+            <input type="hidden" id="loan-id" value="" />
+            <label>Usuario</label>
+            <select id="loan-user" required></select>
+            <label>Equipo</label>
+            <select id="loan-equipment" required></select>
+            <label>Fecha de salida</label>
+            <input type="date" id="loan-date-out" required />
+            <label>Cantidad</label>
+            <input type="number" id="loan-quantity" min="1" value="1" required />
+            <label>Estado</label>
+            <select id="loan-status" required>
+              <option value="Prestado">Prestado</option>
+              <option value="Entregado">Entregado</option>
+            </select>
+            <label>Fecha de entrega</label>
+            <input type="date" id="loan-date-in" />
+            <div class="form-actions">
+              <button type="submit">Guardar préstamo</button>
+              <button type="button" id="loan-cancel" class="button-secondary">Cancelar</button>
+            </div>
+          </form>
+        </div>
+        <div>
+          <h3>Listado de préstamos</h3>
+          <div class="table-wrapper"><table>
+            <thead><tr><th>#</th><th>Usuario</th><th>Equipo</th><th>Salida</th><th>Entrega</th><th>Estado</th><th>Cantidad</th><th>Acciones</th></tr></thead>
+            <tbody id="loan-list"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="reports" class="view">
+      <div class="panel">
+        <h2>Reportes</h2>
+        <p>Consulta préstamos por carrera, equipo o usuario.</p>
+        <div class="report-filters">
+          <label>Carrera</label>
+          <select id="report-career"><option value="">Todos</option></select>
+          <label>Equipo</label>
+          <select id="report-equipment"><option value="">Todos</option></select>
+          <label>Usuario</label>
+          <select id="report-user"><option value="">Todos</option></select>
+          <button id="report-filter" class="button-primary">Aplicar filtros</button>
+          <button id="report-clear" class="button-secondary">Limpiar</button>
+        </div>
+        <div class="cards-grid report-cards">
+          <article class="card card-primary"><h3>Por carrera</h3><div id="report-careers"></div></article>
+          <article class="card card-secondary"><h3>Por equipo</h3><div id="report-equipment-counts"></div></article>
+          <article class="card card-tertiary"><h3>Por usuario</h3><div id="report-users"></div></article>
+        </div>
+        <div class="table-wrapper"><table>
+          <thead><tr><th>#</th><th>Usuario</th><th>Equipo</th><th>Salida</th><th>Entrega</th><th>Estado</th><th>Cantidad</th></tr></thead>
+          <tbody id="report-list"></tbody>
+        </table></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Aplicación creada en HTML, CSS y JavaScript para el proyecto de préstamos.</p>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+  <script src="main.js" defer></script>
+</body>
+</html>
