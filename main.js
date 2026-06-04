@@ -65,7 +65,7 @@ async function initSupabase() {
     });
   }
 
-  if (typeof supabase === 'undefined') {
+  if (typeof window.supabase === 'undefined') {
     try {
       await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js');
     } catch (err) {
@@ -74,7 +74,8 @@ async function initSupabase() {
     }
   }
 
-  supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Use the global attached to window to avoid ReferenceError in some browsers
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
 async function loadRemoteData() {
