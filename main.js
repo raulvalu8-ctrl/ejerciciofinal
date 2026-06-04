@@ -51,7 +51,13 @@ async function initSupabase() {
     return new Promise((resolve, reject) => {
       const existing = document.querySelector(`script[src="${src}"]`);
       if (existing) {
-        if (existing.getAttribute('data-loaded') === '1') return resolve();
+        if (existing.getAttribute('data-loaded') === '1') {
+          return resolve();
+        }
+        if (existing.readyState === 'complete' || existing.readyState === 'loaded' || existing.complete) {
+          existing.setAttribute('data-loaded', '1');
+          return resolve();
+        }
         existing.addEventListener('load', () => resolve());
         existing.addEventListener('error', () => reject(new Error('Failed to load script')));
         return;
@@ -67,7 +73,7 @@ async function initSupabase() {
 
   if (typeof window.supabase === 'undefined') {
     try {
-      await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js');
+      await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js');
     } catch (err) {
       showToast('No se pudo cargar el cliente de Supabase.', 'error');
       throw err;
