@@ -44,6 +44,36 @@ function showToast(message, type = 'success') {
 
 async function initSupabase() {
   if (!useSupabase) return;
+
+  // Ensure the Supabase JS SDK is loaded. If it's not available (network blocked
+  // or CDN didn't load), dynamically insert the script and wait for it.
+  async function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) {
+        if (existing.getAttribute('data-loaded') === '1') return resolve();
+        existing.addEventListener('load', () => resolve());
+        existing.addEventListener('error', () => reject(new Error('Failed to load script')));
+        return;
+      }
+      const s = document.createElement('script');
+      s.src = src;
+      s.async = false;
+      s.onload = () => { s.setAttribute('data-loaded', '1'); resolve(); };
+      s.onerror = () => reject(new Error('Failed to load script'));
+      document.head.appendChild(s);
+    });
+  }
+
+  if (typeof supabase === 'undefined') {
+    try {
+      await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js');
+    } catch (err) {
+      showToast('No se pudo cargar el cliente de Supabase.', 'error');
+      throw err;
+    }
+  }
+
   supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
