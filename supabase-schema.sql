@@ -8,14 +8,14 @@ create table if not exists academic_units (
 create table if not exists careers (
   id bigserial primary key,
   name text not null,
-  unitId bigint references academic_units(id) on delete cascade
+  unitid bigint references academic_units(id) on delete cascade
 );
 
 create table if not exists users (
   id bigserial primary key,
   name text not null,
   type text not null,
-  careerId bigint references careers(id) on delete cascade
+  careerid bigint references careers(id) on delete cascade
 );
 
 create table if not exists equipment (
@@ -27,10 +27,10 @@ create table if not exists equipment (
 
 create table if not exists loans (
   id bigserial primary key,
-  userId bigint references users(id) on delete cascade,
-  equipmentId bigint references equipment(id) on delete cascade,
-  dateOut date not null,
-  dateIn date,
+  userid bigint references users(id) on delete cascade,
+  equipmentid bigint references equipment(id) on delete cascade,
+  dateout date not null,
+  datein date,
   quantity integer not null default 1,
   status text not null
 );

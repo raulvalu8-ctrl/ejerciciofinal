@@ -101,7 +101,19 @@ async function loadRemoteData() {
       showToast(`Error cargando ${table.name}: ${error.message}`, 'error');
       return;
     }
-    state[table.key] = data || [];
+    const rows = data || [];
+    state[table.key] = rows.map(row => {
+      switch (table.key) {
+        case 'careers':
+          return mapRemoteCareer(row);
+        case 'users':
+          return mapRemoteUser(row);
+        case 'loans':
+          return mapRemoteLoan(row);
+        default:
+          return row;
+      }
+    });
   }
 
   state.loans.sort((a,b) => b.id - a.id);
@@ -166,6 +178,26 @@ function saveAll() {
   saveData(STORAGE.users, state.users);
   saveData(STORAGE.equipment, state.equipment);
   saveData(STORAGE.loans, state.loans);
+}
+
+function mapRemoteCareer(row) {
+  return { id: row.id, name: row.name, unitId: row.unitid };
+}
+
+function mapRemoteUser(row) {
+  return { id: row.id, name: row.name, type: row.type, careerId: row.careerid };
+}
+
+function mapRemoteLoan(row) {
+  return {
+    id: row.id,
+    userId: row.userid,
+    equipmentId: row.equipmentid,
+    dateOut: row.dateout,
+    dateIn: row.datein,
+    quantity: row.quantity,
+    status: row.status
+  };
 }
 
 function findName(collection, id) {
@@ -500,7 +532,7 @@ async function submitCareer(event) {
     return;
   }
   if (useSupabase) {
-    const payload = { name, unitId };
+    const payload = { name, unitid: unitId };
     if (id) payload.id = Number(id);
     const { error } = await supabaseClient.from('careers').upsert(payload);
     if (error) {
@@ -535,7 +567,7 @@ async function submitUser(event) {
     return;
   }
   if (useSupabase) {
-    const payload = { name, type, careerId };
+    const payload = { name, type, careerid: careerId };
     if (id) payload.id = Number(id);
     const { error } = await supabaseClient.from('users').upsert(payload);
     if (error) {
@@ -610,7 +642,7 @@ async function submitLoan(event) {
     return;
   }
   if (useSupabase) {
-    const payload = { userId, equipmentId, dateOut, quantity, status, dateIn };
+    const payload = { userid: userId, equipmentid: equipmentId, dateout: dateOut, quantity, status, datein: dateIn };
     if (id) payload.id = Number(id);
     const { error } = await supabaseClient.from('loans').upsert(payload);
     if (error) {
