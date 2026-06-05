@@ -14,6 +14,21 @@ const state = {
   loans: []
 };
 
+const schemaMapping = {
+  careers: { unit: 'unitid' },
+  users: { career: 'careerid' },
+  loans: {
+    user: 'userid',
+    equipment: 'equipmentid',
+    dateOut: 'dateout',
+    dateIn: 'datein'
+  }
+};
+
+function getFieldName(table, key) {
+  return schemaMapping[table] && schemaMapping[table][key] ? schemaMapping[table][key] : key;
+}
+
 function getData(key) {
   const raw = localStorage.getItem(key);
   return raw ? JSON.parse(raw) : [];
@@ -82,6 +97,59 @@ async function initSupabase() {
 
   // Use the global attached to window to avoid ReferenceError in some browsers
   supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  await detectSupabaseSchema();
+}
+
+async function detectSupabaseSchema() {
+  if (!useSupabase) return;
+
+  const tables = [
+    {
+      name: 'careers',
+      map: { unit: { lower: 'unitid', camel: 'unitId' } }
+    },
+    {
+      name: 'users',
+      map: { career: { lower: 'careerid', camel: 'careerId' } }
+    },
+    {
+      name: 'loans',
+      map: {
+        user: { lower: 'userid', camel: 'userId' },
+        equipment: { lower: 'equipmentid', camel: 'equipmentId' },
+        dateOut: { lower: 'dateout', camel: 'dateOut' },
+        dateIn: { lower: 'datein', camel: 'dateIn' }
+      }
+    }
+  ];
+
+  for (const table of tables) {
+    schemaMapping[table.name] = {};
+    const fieldEntries = Object.entries(table.map);
+    const lowerSelect = fieldEntries.map(([, f]) => f.lower).join(',');
+    const camelSelect = fieldEntries.map(([, f]) => f.camel).join(',');
+
+    let result = await supabaseClient.from(table.name).select(`id,${lowerSelect}`).limit(1);
+    if (!result.error) {
+      for (const [key, field] of fieldEntries) {
+        schemaMapping[table.name][key] = field.lower;
+      }
+      continue;
+    }
+
+    result = await supabaseClient.from(table.name).select(`id,${camelSelect}`).limit(1);
+    if (!result.error) {
+      for (const [key, field] of fieldEntries) {
+        schemaMapping[table.name][key] = field.camel;
+      }
+      continue;
+    }
+
+    // If neither version worked, default to lower-case names.
+    for (const [key, field] of fieldEntries) {
+      schemaMapping[table.name][key] = field.lower;
+    }
+  }
 }
 
 async function loadRemoteData() {
@@ -180,21 +248,37 @@ function saveAll() {
   saveData(STORAGE.loans, state.loans);
 }
 
+function getFirstExisting(row, keys) {
+  for (const key of keys) {
+    if (row[key] !== undefined) return row[key];
+  }
+  return undefined;
+}
+
 function mapRemoteCareer(row) {
-  return { id: row.id, name: row.name, unitId: row.unitid };
+  return {
+    id: row.id,
+    name: row.name,
+    unitId: getFirstExisting(row, ['unitid', 'unitId'])
+  };
 }
 
 function mapRemoteUser(row) {
-  return { id: row.id, name: row.name, type: row.type, careerId: row.careerid };
+  return {
+    id: row.id,
+    name: row.name,
+    type: row.type,
+    careerId: getFirstExisting(row, ['careerid', 'careerId'])
+  };
 }
 
 function mapRemoteLoan(row) {
   return {
     id: row.id,
-    userId: row.userid,
-    equipmentId: row.equipmentid,
-    dateOut: row.dateout,
-    dateIn: row.datein,
+    userId: getFirstExisting(row, ['userid', 'userId']),
+    equipmentId: getFirstExisting(row, ['equipmentid', 'equipmentId']),
+    dateOut: getFirstExisting(row, ['dateout', 'dateOut']),
+    dateIn: getFirstExisting(row, ['datein', 'dateIn']),
     quantity: row.quantity,
     status: row.status
   };
@@ -532,7 +616,8 @@ async function submitCareer(event) {
     return;
   }
   if (useSupabase) {
-    const payload = { name, unitid: unitId };
+    const payload = { name };
+    payload[getFieldName('careers', 'unit')] = unitId;
     if (id) payload.id = Number(id);
     const { error } = await supabaseClient.from('careers').upsert(payload);
     if (error) {
@@ -567,7 +652,8 @@ async function submitUser(event) {
     return;
   }
   if (useSupabase) {
-    const payload = { name, type, careerid: careerId };
+    const payload = { name, type };
+    payload[getFieldName('users', 'career')] = careerId;
     if (id) payload.id = Number(id);
     const { error } = await supabaseClient.from('users').upsert(payload);
     if (error) {
@@ -642,7 +728,11 @@ async function submitLoan(event) {
     return;
   }
   if (useSupabase) {
-    const payload = { userid: userId, equipmentid: equipmentId, dateout: dateOut, quantity, status, datein: dateIn };
+    const payload = { quantity, status };
+    payload[getFieldName('loans', 'user')] = userId;
+    payload[getFieldName('loans', 'equipment')] = equipmentId;
+    payload[getFieldName('loans', 'dateOut')] = dateOut;
+    payload[getFieldName('loans', 'dateIn')] = dateIn;
     if (id) payload.id = Number(id);
     const { error } = await supabaseClient.from('loans').upsert(payload);
     if (error) {
